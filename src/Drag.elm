@@ -2,7 +2,7 @@ module Drag
     exposing
         ( State
         , Msg(Start, Moved, End, Click)
-        , onMouseDown
+        , onMouseDownWithOptions
         , subscriptions
         , update
         , init
@@ -12,7 +12,7 @@ module Drag
 fill in readme details.
 
 
-@docs State, Msg, onMouseDown, subscriptions, update, init, delta
+@docs State, Msg, onMouseDownWithOptions, subscriptions, update, init, delta
 
 -}
 
@@ -124,8 +124,8 @@ delta msg model =
 
 
 {-| -}
-onMouseDown : VirtualDom.Options -> location -> VirtualDom.Property (Msg location)
-onMouseDown options interactionLocation =
+onMouseDownWithOptions : VirtualDom.Options -> location -> VirtualDom.Property (Msg location)
+onMouseDownWithOptions options interactionLocation =
     VirtualDom.onWithOptions "mousedown"
         options
         (Json.Decode.map (\p -> Start interactionLocation p) Mouse.position)

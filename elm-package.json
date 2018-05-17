@@ -1,5 +1,5 @@
 {
-    "version": "1.0.0",
+    "version": "2.0.0",
     "summary": "Drag library designed for many different interaction locations",
     "repository": "https://github.com/ThinkAlexandria/elm-drag-locations.git",
     "license": "BSD3",
