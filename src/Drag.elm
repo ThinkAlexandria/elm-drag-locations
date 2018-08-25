@@ -1,24 +1,75 @@
-module Drag
-    exposing
-        ( State
-        , Msg(Start, Moved, End, Click)
-        , onMouseDownWithOptions
-        , subscriptions
-        , update
-        , init
-        , delta
-        )
-{-| Open sourced this snippet so I could hack on new idea on train laptop. TODO:
-fill in readme details.
+module Drag exposing (State, Msg(..), onMouseDownWithOptions, subscriptions, update, init, delta)
 
+{-| This package allows you to make multiple elements draggable simultaneously.
+
+### How it works
+1) You create a single type to represent every possible interaction location.
+``` elm
+type InteractionLocation
+    = GraphNode Int
+    | Label Int
+```
+2) In your view functions, add an attribute to each element you want to make draggable 
+```elm
+viewGraphNode: Int -> Node -> Html Msg
+viewGraphNode key node =
+    div
+        [ Drag.onMouseDownWithOptions
+            { stopPropogation = False, preventDefault = False }
+            (GraphNode key)
+        -- ...
+        ]
+        [ text <| "Graph Node " ++ (String.fromInt key) ]
+```
+
+3) In your update, handle the start, movement, and end of a drag as well as
+clicks on an interaction location.
+```elm
+    (Drag.Start location currentMousePosition) as dragMsg ->
+        { model | dragState = Drag.update dragMsg model.dragState }
+
+    (Drag.Moved location currentMousePosition) as dragMsg ->
+        let
+            (dx, dy) = Drag.delta dragMsg model.dragState
+            updatedModel =
+                { model | dragState = Drag.update dragMsg model.dragState }
+        in
+            case location of
+                GraphNode key ->
+                    -- Handle the drag of the node ...
+
+                Label key ->
+                    -- Handle the drag of a label ...
+
+    (Drag.End location currentMousePosition) as dragMsg ->
+        { model | dragState = Drag.update dragMsg model.dragState }
+
+    (Drag.Click location currentMousePosition) as dragMsg ->
+        { model | dragState = Drag.update dragMsg model.dragState }
+    
+```
+4) Add this library's subscriptions to your subscriptions.
+```elm
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch
+        [ Drag.subscriptions
+        --, ... your subscriptions
+        ]
+```
 
 @docs State, Msg, onMouseDownWithOptions, subscriptions, update, init, delta
 
 -}
 
+import Json.Decode exposing (Decoder)
+import Browser.Events as Events
 import VirtualDom
-import Mouse exposing (Position)
-import Json.Decode
+
+type alias Position =
+    { x: Int
+    , y: Int
+    }
 
 {-| -}
 type State interactionLocation
@@ -123,12 +174,29 @@ delta msg model =
                     ( xy.x - current.x, xy.y - current.y )
 
 
+type alias Options msg =
+    { message: msg
+    , stopPropagation: Bool
+    , preventDefault: Bool
+    }
+
 {-| -}
-onMouseDownWithOptions : VirtualDom.Options -> location -> VirtualDom.Property (Msg location)
+onMouseDownWithOptions : { stopPropagation: Bool, preventDefault: Bool } -> location -> VirtualDom.Attribute (Msg location)
 onMouseDownWithOptions options interactionLocation =
-    VirtualDom.onWithOptions "mousedown"
-        options
-        (Json.Decode.map (\p -> Start interactionLocation p) Mouse.position)
+    VirtualDom.on "mousedown"
+        (VirtualDom.Custom
+            ( Json.Decode.map3 Options
+                (Json.Decode.map (\p -> Start interactionLocation p) mousePosition)
+                (Json.Decode.succeed options.stopPropagation) 
+                (Json.Decode.succeed options.preventDefault)
+            )
+        )
+
+mousePosition : Decoder Position
+mousePosition =
+    Json.Decode.map2 Position
+        (Json.Decode.field "clientX" Json.Decode.int)
+        (Json.Decode.field "clientY" Json.Decode.int)
 
 
 {-| -}
@@ -137,14 +205,14 @@ subscriptions lastState =
     case lastState of
         MouseDown { location } ->
             Sub.batch
-                [ Mouse.moves (\p -> Moved location p)
-                , Mouse.ups (\p -> Click location p)
+                [ Events.onMouseMove (Json.Decode.map (\p -> Moved location p) mousePosition)
+                , Events.onMouseUp (Json.Decode.map (\p -> Click location p) mousePosition)
                 ]
 
         MouseMoved { location } ->
             Sub.batch
-                [ Mouse.moves (\p -> Moved location p)
-                , Mouse.ups (\p -> End location p)
+                [ Events.onMouseMove (Json.Decode.map (\p -> Moved location p) mousePosition)
+                , Events.onMouseUp (Json.Decode.map (\p -> End location p) mousePosition)
                 ]
 
         NotDragging ->

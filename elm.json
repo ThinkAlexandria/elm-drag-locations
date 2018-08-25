@@ -1,0 +1,18 @@
+{
+    "type": "package",
+    "name": "ThinkAlexandria/elm-drag-locations",
+    "summary": "Drag library designed for many different interaction locations",
+    "license": "BSD-3-Clause",
+    "version": "3.0.0",
+    "exposed-modules": [
+        "Drag"
+    ],
+    "elm-version": "0.19.0 <= v < 0.20.0",
+    "dependencies": {
+        "elm/browser": "1.0.0 <= v < 2.0.0",
+        "elm/core": "1.0.0 <= v < 2.0.0",
+        "elm/json": "1.0.0 <= v < 2.0.0",
+        "elm/virtual-dom": "1.0.0 <= v < 2.0.0"
+    },
+    "test-dependencies": {}
+}
