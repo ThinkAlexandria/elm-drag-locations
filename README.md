@@ -21,7 +21,7 @@ viewGraphNode: Int -> Node -> Html Msg
 viewGraphNode key node =
     div
         [ Drag.onMouseDownWithOptions
-            { stopPropogation = False, preventDefault = False }
+            { stopPropagation = False, preventDefault = False }
             (GraphNode key)
         -- ...
         ]
