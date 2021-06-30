@@ -1,7 +1,7 @@
-module Drag exposing (State, Msg(..), onMouseDownWithOptions, subscriptions, update, init, delta)
+module Drag exposing (State, Msg(..), onMouseDownWithOptions, subscriptions, update, init, delta, getLocation)
 
 {-|
-@docs State, Msg, onMouseDownWithOptions, subscriptions, update, init, delta
+@docs State, Msg, onMouseDownWithOptions, subscriptions, update, init, delta, getLocation
 
 -}
 
@@ -27,6 +27,20 @@ type State interactionLocation
         , location : interactionLocation
         }
     | NotDragging
+
+{-| -}
+getLocation : State interactionLocation -> Maybe interactionLocation
+getLocation state =
+    case state of
+        MouseDown record ->
+            Just record.location
+
+        MouseMoved record ->
+            Just record.location
+
+        NotDragging ->
+            Nothing
+
 
 
 {-| -}
